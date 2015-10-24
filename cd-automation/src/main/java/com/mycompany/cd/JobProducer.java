@@ -16,6 +16,7 @@ public class JobProducer implements Runnable {
     private Session session;
     private Destination jobRequestQueue;
     
+    private final int NUMBER_OF_JOBS = 1000;
 	private String threadName;
 	
 	public JobProducer(String threadName) {
@@ -32,7 +33,7 @@ public class JobProducer implements Runnable {
     public void execute() throws Exception {
         MessageProducer producer = session.createProducer(jobRequestQueue);
 
-        for (int i = 0; i < 1000; ++i) {
+        for (int i = 0; i < NUMBER_OF_JOBS; ++i) {
             TextMessage message = session.createTextMessage("Job number: " + i);
             message.setIntProperty("JobID", i);
             producer.send(message);

@@ -28,7 +28,7 @@ public class Executor implements Runnable, MessageListener {
     
 	private Random random = new Random();
 	private final double MEAN = 1000.0;;
-	private final double VARIANCE = 200.0;
+	private final double VARIANCE = 100.0;
 	private final CountDownLatch done = new CountDownLatch(1000);
 	
 	private String threadName;
@@ -48,7 +48,7 @@ public class Executor implements Runnable, MessageListener {
         catch (Exception e) {
         	System.out.println("Caught an exception: " + e.getMessage());
         }
-        done.countDown();
+        //done.countDown();
     }
 	
     private void before() throws Exception {

@@ -24,9 +24,9 @@ public class ResponseConsumer implements Runnable, MessageListener {
     private MessageConsumer consumer;
     
 	private Random random = new Random();
-	private final double MEAN = 2000.0;;
-	private final double VARIANCE = 200.0;
-	private final CountDownLatch done = new CountDownLatch(7);
+	private final double MEAN = 500.0;;
+	private final double VARIANCE = 100.0;
+	private final CountDownLatch done = new CountDownLatch(1000);
 	
 	private String threadName;
 
@@ -45,7 +45,7 @@ public class ResponseConsumer implements Runnable, MessageListener {
         catch (Exception e) {
         	System.out.println("Caught an exception: " + e.getMessage());
         }
-        done.countDown();
+        //done.countDown();
     }
 	
     private void before() throws Exception {
@@ -68,7 +68,7 @@ public class ResponseConsumer implements Runnable, MessageListener {
         System.out.println("Starting " + threadName);
 		try {
 			before();
-			done.await(1, TimeUnit.MINUTES);
+			done.await(10, TimeUnit.MINUTES);
 			after();
 		}
 		catch (Exception e) {
