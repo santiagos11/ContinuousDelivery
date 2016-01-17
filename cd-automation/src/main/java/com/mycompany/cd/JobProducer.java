@@ -16,11 +16,12 @@ public class JobProducer implements Runnable {
     private Session session;
     private Destination jobRequestQueue;
     
-    private final int NUMBER_OF_JOBS = 1000;
+    private final int NUMBER_OF_JOBS;
 	private String threadName;
 	
-	public JobProducer(String threadName) {
+	public JobProducer(String threadName, int numberOfJobs) {
 		this.threadName = threadName;
+		this.NUMBER_OF_JOBS = numberOfJobs;
 	}
 	
     public void before() throws Exception {
@@ -32,13 +33,11 @@ public class JobProducer implements Runnable {
     
     public void execute() throws Exception {
         MessageProducer producer = session.createProducer(jobRequestQueue);
-
-        for (int i = 0; i < NUMBER_OF_JOBS; ++i) {
-            TextMessage message = session.createTextMessage("Job number: " + i);
-            message.setIntProperty("JobID", i);
+        for (int i = 0; i < NUMBER_OF_JOBS; i++) {
+            TextMessage message = session.createTextMessage("Job number: ");
+            message.setIntProperty("JobId", i);
             producer.send(message);
         }
-
         producer.close();
     }
 	

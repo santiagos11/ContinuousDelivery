@@ -40,7 +40,7 @@ public class Executor implements Runnable, MessageListener {
     public void onMessage(Message message) {
         try {
             TextMessage response = (TextMessage) message;
-            System.out.println(threadName + ": " + response.getText());
+            System.out.println(threadName + ": " + response.getIntProperty("JobId"));
             double time = random.nextGaussian() * VARIANCE + MEAN;
             TimeUnit.MILLISECONDS.sleep((long) time);
             producer.send(response);

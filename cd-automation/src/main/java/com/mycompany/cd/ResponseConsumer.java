@@ -8,13 +8,12 @@ import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
-import javax.jms.MessageListener;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 
-public class ResponseConsumer implements Runnable, MessageListener {
+public class ResponseConsumer implements Runnable {
 
 	private final String connectionUri = "tcp://localhost:61616?jms.prefetchPolicy.queuePrefetch=1";
     private ActiveMQConnectionFactory connectionFactory;
@@ -24,29 +23,17 @@ public class ResponseConsumer implements Runnable, MessageListener {
     private MessageConsumer consumer;
     
 	private Random random = new Random();
-	private final double MEAN = 500.0;;
+	private final double MEAN = 1000.0;;
 	private final double VARIANCE = 100.0;
-	private final CountDownLatch done = new CountDownLatch(1000);
+	private final CountDownLatch done;
 	
 	private String threadName;
 
 	
-	public ResponseConsumer(String threadName) {
+	public ResponseConsumer(String threadName, CountDownLatch done) {
 		this.threadName = threadName;
+		this.done = done;
 	}
-	
-    public void onMessage(Message message) {
-        try {
-            TextMessage response = (TextMessage) message;
-            System.out.println(threadName + ": " + response.getText());
-            double time = random.nextGaussian() * VARIANCE + MEAN;
-            TimeUnit.MILLISECONDS.sleep((long) time);
-        } 
-        catch (Exception e) {
-        	System.out.println("Caught an exception: " + e.getMessage());
-        }
-        //done.countDown();
-    }
 	
     private void before() throws Exception {
         connectionFactory = new ActiveMQConnectionFactory(connectionUri);
@@ -54,8 +41,19 @@ public class ResponseConsumer implements Runnable, MessageListener {
         session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         jobResponseQueue = session.createQueue("Outbound");
         consumer = session.createConsumer(jobResponseQueue);
-        consumer.setMessageListener(this);
         connection.start();
+    }
+    
+    private void execute() throws Exception {
+    	while (!Thread.currentThread().isInterrupted()) {
+    		Message response = consumer.receive();
+    		if (response instanceof TextMessage) {
+    			//System.out.println(threadName + ": " + ((TextMessage) response).getText() + response.getIntProperty("JobId"));
+                done.countDown();
+    			double time = random.nextGaussian() * VARIANCE + MEAN;
+                TimeUnit.MILLISECONDS.sleep((long) time);
+    		}
+    	}
     }
     
     private void after() throws Exception {
@@ -68,13 +66,20 @@ public class ResponseConsumer implements Runnable, MessageListener {
         System.out.println("Starting " + threadName);
 		try {
 			before();
-			done.await(10, TimeUnit.MINUTES);
-			after();
+			execute();
 		}
 		catch (Exception e) {
-			System.out.println("Caught an exception: " + e.getMessage());
+			System.out.println("Caught an exception: " + e.getMessage() + " in " + threadName);
 		}
-        System.out.println("Finish running " + threadName);
+		finally {
+		 	try {
+				after();
+			} 
+		 	catch (Exception e) {
+				System.out.println("Caught an exception: " + e.getMessage());
+			}
+			System.out.println("Finish running " + threadName);	
+		}
 	}
     
 }
